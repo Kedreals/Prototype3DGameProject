@@ -15,13 +15,18 @@ namespace Prototype
         public Color4 Color;
 
         public static readonly InputElement[] InputElemets = new InputElement[]
-        { new InputElement("POSITION", 0, Format.R32G32B32_Float,0, 0),
+        { new InputElement("POSITION", 0, Format.R32G32B32A32_Float,0, 0),
             new InputElement("COLOR", 0, Format.R32G32B32A32_Float,Utilities.SizeOf<Vector4>() ,0)};
 
         public Vertex(Vector3 pos, Color4 color)
         {
             Position = new Vector4(pos, 1);
             Color = color;
+        }
+
+        public void Transform(Matrix m)
+        {
+            Position = Vector4.Transform(Position, m);
         }
     }
 }
