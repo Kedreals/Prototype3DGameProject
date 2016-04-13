@@ -148,7 +148,7 @@ namespace Prototype.Handler
 
             viewport = new Viewport(0, 0, Size.X, Size.Y);
 
-            D3D11.Device.CreateWithSwapChain(DriverType.Hardware, D3D11.DeviceCreationFlags.None, swapChainDesc, out device, out swapChain);
+            D3D11.Device.CreateWithSwapChain(DriverType.Hardware, D3D11.DeviceCreationFlags.Debug, swapChainDesc, out device, out swapChain);
 
             deviceContext = device.ImmediateContext;
 
@@ -163,6 +163,51 @@ namespace Prototype.Handler
 
             vertexBuffer = D3D11.Buffer.Create<Vertex>(device, D3D11.BindFlags.VertexBuffer, new Vertex[1]);
             lastVertexArrayLength = 1;
+        }
+
+        private void InitializeShader()
+        {
+            //creating shaderbytecode from a file and using it for initializing shader (data, start methode, version to use, flag)
+            using (var vertextShaderByteCode = ShaderBytecode.CompileFromFile("Shader/standardVertexShader.hlsl", "main", "vs_4_0", ShaderFlags.Debug))
+            {
+                //get the signature for the input
+                inputSignature = ShaderSignature.GetInputSignature(vertextShaderByteCode);
+                //creating a vertex shader for the device
+                vertexShader = new D3D11.VertexShader(device, vertextShaderByteCode);
+            }
+            using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile("Shader/standardPixelShader.hlsl", "main", "ps_4_0", ShaderFlags.Debug))
+            {
+                //creating a pixel shader for the device
+                pixelShader = new D3D11.PixelShader(device, pixelShaderByteCode);
+            }
+
+            //creating the Input Layout (device, signature, inputElements)
+            inputLayout = new D3D11.InputLayout(device, inputSignature, inputElements);
+
+            //set the device, to use the shader
+            deviceContext.VertexShader.Set(vertexShader);
+            deviceContext.PixelShader.Set(pixelShader);
+
+            //set the primitive topology (how to treat the input)
+            deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
+            //set the device to use the input Layout
+            deviceContext.InputAssembler.InputLayout = inputLayout;
+
+            deviceContext.InputAssembler.SetVertexBuffers(0, new D3D11.VertexBufferBinding(vertexBuffer, Utilities.SizeOf<Vertex>(), 0));
+
+            float ratio = (float)Size.X / (float)Size.Y;
+
+            Matrix ratioMatrix = new Matrix(1 / ratio, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+
+            ratioBuffer = D3D11.Buffer.Create<Matrix>(device, D3D11.BindFlags.ConstantBuffer, ref ratioMatrix);
+
+            deviceContext.VertexShader.SetConstantBuffer(0, ratioBuffer);
+
+            Matrix invCamara = camara.GetInvertedCamaraPosition();
+
+            camaraBuffer = D3D11.Buffer.Create<Matrix>(device, D3D11.BindFlags.ConstantBuffer, ref invCamara);
+            deviceContext.VertexShader.SetConstantBuffer(1, camaraBuffer);
+
         }
 
         /// <summary>
@@ -210,58 +255,13 @@ namespace Prototype.Handler
             if (VertexArray.Length != lastVertexArrayLength)
             {
                 vertexBuffer.Dispose();
-                vertexBuffer = D3D11.Buffer.Create<Vertex>(device, D3D11.BindFlags.None, VertexArray);
+                vertexBuffer = D3D11.Buffer.Create<Vertex>(device, D3D11.BindFlags.VertexBuffer, VertexArray);
                 deviceContext.InputAssembler.SetVertexBuffers(0, new D3D11.VertexBufferBinding(vertexBuffer, Utilities.SizeOf<Vertex>(), 0));
             }
 
             deviceContext.Draw(VertexArray.Count(), 0);
 
             swapChain.Present(1, PresentFlags.None);
-        }
-
-        private void InitializeShader()
-        {
-            //creating shaderbytecode from a file and using it for initializing shader (data, start methode, version to use, flag)
-            using (var vertextShaderByteCode = ShaderBytecode.CompileFromFile("Shader/standardVertexShader.hlsl", "main", "vs_4_0", ShaderFlags.Debug))
-            {
-                //get the signature for the input
-                inputSignature = ShaderSignature.GetInputSignature(vertextShaderByteCode);
-                //creating a vertex shader for the device
-                vertexShader = new D3D11.VertexShader(device, vertextShaderByteCode);
-            }
-            using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile("Shader/standardPixelShader.hlsl", "main", "ps_4_0", ShaderFlags.Debug))
-            {
-                //creating a pixel shader for the device
-                pixelShader = new D3D11.PixelShader(device, pixelShaderByteCode);
-            }
-
-            //creating the Input Layout (device, signature, inputElements)
-            inputLayout = new D3D11.InputLayout(device, inputSignature, inputElements);
-
-            //set the device, to use the shader
-            deviceContext.VertexShader.Set(vertexShader);
-            deviceContext.PixelShader.Set(pixelShader);
-
-            //set the primitive topology (how to treat the input)
-            deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-            //set the device to use the input Layout
-            deviceContext.InputAssembler.InputLayout = inputLayout;
-
-            deviceContext.InputAssembler.SetVertexBuffers(0, new D3D11.VertexBufferBinding(vertexBuffer, Utilities.SizeOf<Vertex>(), 0));
-
-            float ratio = (float)Size.X / (float)Size.Y;
-
-            Matrix ratioMatrix = new Matrix(1/ratio, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-
-            ratioBuffer = D3D11.Buffer.Create<Matrix>(device, D3D11.BindFlags.ConstantBuffer, ref ratioMatrix);
-
-            deviceContext.VertexShader.SetConstantBuffer(0, ratioBuffer);
-
-            Matrix invCamara = camara.GetInvertedCamaraPosition();
-
-            camaraBuffer = D3D11.Buffer.Create<Matrix>(device, D3D11.BindFlags.ConstantBuffer, ref invCamara);
-            deviceContext.VertexShader.SetConstantBuffer(1, camaraBuffer);
-
         }
 
         /// <summary>

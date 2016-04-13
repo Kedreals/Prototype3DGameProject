@@ -74,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GameObjects\GameObject.cs" />
+    <Compile Include="GameObjects\Quader.cs" />
     <Compile Include="GameStates\Game.cs" />
     <Compile Include="Handler\Camara.cs" />
     <Compile Include="Handler\KeyboardHandler.cs" />

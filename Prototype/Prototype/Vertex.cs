@@ -20,7 +20,7 @@ namespace Prototype
 
         public Vertex(Vector3 pos, Color4 color)
         {
-            Position = new Vector4(pos, 1);
+            Position = new Vector4(pos,1);
             Color = color;
         }
 

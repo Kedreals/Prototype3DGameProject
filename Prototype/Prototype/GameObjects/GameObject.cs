@@ -9,16 +9,16 @@ namespace Prototype.GameObjects
 {
     class GameObject : IDrawable
     {
-        Vertex[] vertecies;
+        Quader q;
 
         public GameObject()
         {
-            vertecies = new Vertex[] { new Vertex(new Vector3(0, 0, 1), Color4.Black), new Vertex(new Vector3(-1, 1, 1), Color4.Black), new Vertex(new Vector3(1, 1, 1), Color4.Black) };
+            q = new Quader(2, 3, 2, Color4.White);
         }
 
         public Vertex[] GetTriangleList()
         {
-            return vertecies;
+            return q.GetTriangulation();
         }
     }
 }

@@ -17,10 +17,13 @@ VOut main(float4 position : POSITION, float4 color : COLOR)
 	VOut output;
 
 	//scaling according to the z achse
-	float4 p = float4(position[0] / (position[2] + 0.01f), position[1] / (position[2] + 0.01f), position[2] - abs(position[2]), position[3]);
-	p = mul(ratio, p);
+	float4 p = mul(camara, position);
+	p = float4(p[0] / p[2], p[1] / p[2], p[2] - abs(p[2]), 1);
+
+
 	//setting the values for the pixelshader
-	output.position = mul(camara,p);
+	//output.position = p;
+	output.position = mul(ratio,p);
 	output.color = color;
 
 	return output;
